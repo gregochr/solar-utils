@@ -206,6 +206,134 @@ class SolarCalculatorTest {
     }
 
     // -------------------------------------------------------------------------
+    // Civil twilight (golden hour window)
+    // -------------------------------------------------------------------------
+
+    @Test
+    @DisplayName("Civil dawn is before sunrise on a typical winter day")
+    void civilDawn_isBeforeSunrise_onWinterDay() {
+        LocalDate date = LocalDate.of(2026, 2, 20);
+        LocalDateTime dawn = calculator.civilDawn(DURHAM_LAT, DURHAM_LON, date, UTC);
+        LocalDateTime sunrise = calculator.sunrise(DURHAM_LAT, DURHAM_LON, date, UTC);
+
+        assertThat(dawn).isBefore(sunrise);
+    }
+
+    @Test
+    @DisplayName("Civil dusk is after sunset on a typical winter day")
+    void civilDusk_isAfterSunset_onWinterDay() {
+        LocalDate date = LocalDate.of(2026, 2, 20);
+        LocalDateTime sunset = calculator.sunset(DURHAM_LAT, DURHAM_LON, date, UTC);
+        LocalDateTime dusk = calculator.civilDusk(DURHAM_LAT, DURHAM_LON, date, UTC);
+
+        assertThat(dusk).isAfter(sunset);
+    }
+
+    @Test
+    @DisplayName("Civil dawn to sunrise window is between 20 and 60 minutes in winter")
+    void civilDawn_toSunrise_windowIsBetween20And60Minutes_inWinter() {
+        LocalDate date = LocalDate.of(2026, 2, 20);
+        LocalDateTime dawn = calculator.civilDawn(DURHAM_LAT, DURHAM_LON, date, UTC);
+        LocalDateTime sunrise = calculator.sunrise(DURHAM_LAT, DURHAM_LON, date, UTC);
+
+        long minutes = java.time.Duration.between(dawn, sunrise).toMinutes();
+        assertThat(minutes).isBetween(20L, 60L);
+    }
+
+    @Test
+    @DisplayName("Civil dusk window is longer in summer than in winter (shallower sun angle)")
+    void civilTwilight_window_isLongerInSummerThanWinter() {
+        LocalDate summer = LocalDate.of(2026, 6, 21);
+        LocalDate winter = LocalDate.of(2026, 12, 21);
+
+        long summerWindow = java.time.Duration.between(
+                calculator.sunset(DURHAM_LAT, DURHAM_LON, summer, UTC),
+                calculator.civilDusk(DURHAM_LAT, DURHAM_LON, summer, UTC)).toMinutes();
+
+        long winterWindow = java.time.Duration.between(
+                calculator.sunset(DURHAM_LAT, DURHAM_LON, winter, UTC),
+                calculator.civilDusk(DURHAM_LAT, DURHAM_LON, winter, UTC)).toMinutes();
+
+        assertThat(summerWindow).isGreaterThan(winterWindow);
+    }
+
+    // -------------------------------------------------------------------------
+    // Solar noon
+    // -------------------------------------------------------------------------
+
+    @Test
+    @DisplayName("Solar noon is between sunrise and sunset")
+    void solarNoon_isBetweenSunriseAndSunset() {
+        LocalDate date = LocalDate.of(2026, 6, 21);
+        LocalDateTime sunrise = calculator.sunrise(DURHAM_LAT, DURHAM_LON, date, UTC);
+        LocalDateTime noon = calculator.solarNoon(DURHAM_LAT, DURHAM_LON, date, UTC);
+        LocalDateTime sunset = calculator.sunset(DURHAM_LAT, DURHAM_LON, date, UTC);
+
+        assertThat(noon).isAfter(sunrise).isBefore(sunset);
+    }
+
+    @Test
+    @DisplayName("Solar noon at Durham is close to 12:00 UTC (within 30 minutes)")
+    void solarNoon_Durham_isCloseToNoonUTC() {
+        LocalDate date = LocalDate.of(2026, 6, 21);
+        LocalDateTime noon = calculator.solarNoon(DURHAM_LAT, DURHAM_LON, date, UTC);
+
+        LocalDateTime expectedNoon = date.atTime(12, 0);
+        assertThat(noon).isCloseTo(expectedNoon, within(30, MINUTES));
+    }
+
+    @Test
+    @DisplayName("Solar noon is approximately equidistant between sunrise and sunset")
+    void solarNoon_isApproximatelyMidpoint_betweenSunriseAndSunset() {
+        LocalDate date = LocalDate.of(2026, 3, 20);
+        LocalDateTime sunrise = calculator.sunrise(DURHAM_LAT, DURHAM_LON, date, UTC);
+        LocalDateTime noon = calculator.solarNoon(DURHAM_LAT, DURHAM_LON, date, UTC);
+        LocalDateTime sunset = calculator.sunset(DURHAM_LAT, DURHAM_LON, date, UTC);
+
+        long minutesToNoon = MINUTES.between(sunrise, noon);
+        long minutesFromNoon = MINUTES.between(noon, sunset);
+
+        assertThat(minutesToNoon).isCloseTo(minutesFromNoon, org.assertj.core.data.Offset.offset(5L));
+    }
+
+    // -------------------------------------------------------------------------
+    // Day length
+    // -------------------------------------------------------------------------
+
+    @Test
+    @DisplayName("dayLengthMinutes() returns longer day in summer than winter at Durham")
+    void dayLengthMinutes_isLongerInSummerThanWinter() {
+        long summer = calculator.dayLengthMinutes(DURHAM_LAT, DURHAM_LON, LocalDate.of(2026, 6, 21));
+        long winter = calculator.dayLengthMinutes(DURHAM_LAT, DURHAM_LON, LocalDate.of(2026, 12, 21));
+
+        assertThat(summer).isGreaterThan(winter);
+    }
+
+    @Test
+    @DisplayName("Day length on the equinox is approximately 12 hours")
+    void dayLength_onEquinox_isApproximately12Hours() {
+        long minutes = calculator.dayLengthMinutes(DURHAM_LAT, DURHAM_LON, LocalDate.of(2026, 3, 20));
+
+        assertThat(minutes).isCloseTo(720L, org.assertj.core.data.Offset.offset(30L));
+    }
+
+    @Test
+    @DisplayName("Day length is positive for all seasons")
+    void dayLength_isPositive_forAllSeasons() {
+        LocalDate[] dates = {
+            LocalDate.of(2026, 1, 1),
+            LocalDate.of(2026, 3, 20),
+            LocalDate.of(2026, 6, 21),
+            LocalDate.of(2026, 9, 22),
+            LocalDate.of(2026, 12, 21)
+        };
+
+        for (LocalDate date : dates) {
+            assertThat(calculator.dayLengthMinutes(DURHAM_LAT, DURHAM_LON, date)).isPositive();
+        }
+    }
+
+    // -------------------------------------------------------------------------
     // Sanity checks
     // -------------------------------------------------------------------------
 
