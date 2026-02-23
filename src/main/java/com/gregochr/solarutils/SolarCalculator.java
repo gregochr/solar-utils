@@ -46,6 +46,80 @@ public class SolarCalculator {
         return calculate(latitude, longitude, date, zone, false);
     }
 
+    /**
+     * Calculates the compass azimuth (degrees clockwise from North) at which the sun rises
+     * for a given location and date.
+     *
+     * <p>At the equinoxes this is approximately 90° (due East). In summer it is less than 90°
+     * (north of East); in winter it is greater than 90° (south of East).
+     *
+     * @param latitude  latitude in decimal degrees (positive = North)
+     * @param longitude longitude in decimal degrees (positive = East)
+     * @param date      the date for which to calculate the sunrise azimuth
+     * @return sunrise azimuth in whole degrees (0–359, clockwise from North)
+     */
+    public int sunriseAzimuth(double latitude, double longitude, LocalDate date) {
+        return calculateAzimuth(latitude, date, true);
+    }
+
+    /**
+     * Calculates the compass azimuth (degrees clockwise from North) at which the sun sets
+     * for a given location and date.
+     *
+     * <p>At the equinoxes this is approximately 270° (due West). In summer it is greater than
+     * 270° (north of West); in winter it is less than 270° (south of West).
+     *
+     * @param latitude  latitude in decimal degrees (positive = North)
+     * @param longitude longitude in decimal degrees (positive = East)
+     * @param date      the date for which to calculate the sunset azimuth
+     * @return sunset azimuth in whole degrees (0–359, clockwise from North)
+     */
+    public int sunsetAzimuth(double latitude, double longitude, LocalDate date) {
+        return calculateAzimuth(latitude, date, false);
+    }
+
+    private int calculateAzimuth(double latitude, LocalDate date, boolean isSunrise) {
+        double julianDay = toJulianDay(date);
+        double t = julianCentury(julianDay);
+
+        double meanLongitude = solarMeanLongitude(t);
+        double meanAnomaly = solarMeanAnomaly(t);
+        double eqCenter = equationOfCenter(t, meanAnomaly);
+        double sunTrueLongitude = meanLongitude + eqCenter;
+
+        double omega = 125.04 - 1934.136 * t;
+        double apparentLongitude = sunTrueLongitude - 0.00569 - 0.00478 * Math.sin(Math.toRadians(omega));
+
+        double meanObliquity = meanObliquityOfEcliptic(t);
+        double correctedObliquity = meanObliquity + 0.00256 * Math.cos(Math.toRadians(omega));
+
+        double declinationDeg = Math.toDegrees(
+                Math.asin(Math.sin(Math.toRadians(correctedObliquity)) * Math.sin(Math.toRadians(apparentLongitude)))
+        );
+
+        // At sunrise/sunset the solar altitude is -(ZENITH - 90°) = -0.833°,
+        // accounting for atmospheric refraction and the solar disc radius.
+        double altitudeDeg = -(ZENITH - 90.0);
+        double latRad = Math.toRadians(latitude);
+        double decRad = Math.toRadians(declinationDeg);
+        double altRad = Math.toRadians(altitudeDeg);
+
+        double cosAz = (Math.sin(decRad) - Math.sin(latRad) * Math.sin(altRad))
+                / (Math.cos(latRad) * Math.cos(altRad));
+
+        // Clamp to [-1, 1] to guard against floating-point rounding at extreme latitudes.
+        cosAz = Math.max(-1.0, Math.min(1.0, cosAz));
+
+        double azimuthDeg = Math.toDegrees(Math.acos(cosAz));
+
+        // arccos gives the Eastern-half angle (0–180°); mirror it for sunset.
+        if (!isSunrise) {
+            azimuthDeg = 360.0 - azimuthDeg;
+        }
+
+        return (int) Math.round(azimuthDeg);
+    }
+
     private LocalDateTime calculate(double latitude, double longitude, LocalDate date, ZoneId zone, boolean isSunrise) {
         double julianDay = toJulianDay(date);
         double t = julianCentury(julianDay);

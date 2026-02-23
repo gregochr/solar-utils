@@ -140,6 +140,72 @@ class SolarCalculatorTest {
     }
 
     // -------------------------------------------------------------------------
+    // Sunrise azimuth
+    // -------------------------------------------------------------------------
+
+    @Test
+    @DisplayName("Sunrise azimuth at Durham on spring equinox is approximately due East (90°)")
+    void sunriseAzimuth_Durham_springEquinox_isDueEast() {
+        int azimuth = calculator.sunriseAzimuth(DURHAM_LAT, DURHAM_LON, LocalDate.of(2026, 3, 20));
+
+        assertThat(azimuth).isCloseTo(90, org.assertj.core.data.Offset.offset(5));
+    }
+
+    @Test
+    @DisplayName("Sunrise azimuth at Durham on summer solstice is north of East (< 90°)")
+    void sunriseAzimuth_Durham_summerSolstice_isNorthOfEast() {
+        int azimuth = calculator.sunriseAzimuth(DURHAM_LAT, DURHAM_LON, LocalDate.of(2026, 6, 21));
+
+        assertThat(azimuth).isLessThan(90);
+    }
+
+    @Test
+    @DisplayName("Sunrise azimuth at Durham on winter solstice is south of East (> 90°)")
+    void sunriseAzimuth_Durham_winterSolstice_isSouthOfEast() {
+        int azimuth = calculator.sunriseAzimuth(DURHAM_LAT, DURHAM_LON, LocalDate.of(2026, 12, 21));
+
+        assertThat(azimuth).isGreaterThan(90);
+    }
+
+    // -------------------------------------------------------------------------
+    // Sunset azimuth
+    // -------------------------------------------------------------------------
+
+    @Test
+    @DisplayName("Sunset azimuth at Durham on autumn equinox is approximately due West (270°)")
+    void sunsetAzimuth_Durham_autumnEquinox_isDueWest() {
+        int azimuth = calculator.sunsetAzimuth(DURHAM_LAT, DURHAM_LON, LocalDate.of(2026, 9, 22));
+
+        assertThat(azimuth).isCloseTo(270, org.assertj.core.data.Offset.offset(5));
+    }
+
+    @Test
+    @DisplayName("Sunset azimuth at Durham on summer solstice is north of West (> 270°)")
+    void sunsetAzimuth_Durham_summerSolstice_isNorthOfWest() {
+        int azimuth = calculator.sunsetAzimuth(DURHAM_LAT, DURHAM_LON, LocalDate.of(2026, 6, 21));
+
+        assertThat(azimuth).isGreaterThan(270);
+    }
+
+    @Test
+    @DisplayName("Sunset azimuth at Durham on winter solstice is south of West (< 270°)")
+    void sunsetAzimuth_Durham_winterSolstice_isSouthOfWest() {
+        int azimuth = calculator.sunsetAzimuth(DURHAM_LAT, DURHAM_LON, LocalDate.of(2026, 12, 21));
+
+        assertThat(azimuth).isLessThan(270);
+    }
+
+    @Test
+    @DisplayName("Sunrise and sunset azimuths are symmetric about 180° on the equinox")
+    void azimuths_areSymmetricAbout180_onEquinox() {
+        LocalDate equinox = LocalDate.of(2026, 3, 20);
+        int rise = calculator.sunriseAzimuth(DURHAM_LAT, DURHAM_LON, equinox);
+        int set = calculator.sunsetAzimuth(DURHAM_LAT, DURHAM_LON, equinox);
+
+        assertThat(rise + set).isCloseTo(360, org.assertj.core.data.Offset.offset(2));
+    }
+
+    // -------------------------------------------------------------------------
     // Sanity checks
     // -------------------------------------------------------------------------
 
