@@ -1,0 +1,29 @@
+version: 2
+
+updates:
+
+  - package-ecosystem: "maven"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    groups:
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    commit-message:
+      prefix: "deps"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    groups:
+      actions:
+        update-types:
+          - "minor"
+          - "patch"
+    commit-message:
+      prefix: "deps"

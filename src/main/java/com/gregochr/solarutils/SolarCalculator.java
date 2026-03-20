@@ -120,8 +120,8 @@ public class SolarCalculator {
      * @return solar noon time as a LocalDateTime in the given time zone
      */
     public LocalDateTime solarNoon(double latitude, double longitude, LocalDate date, ZoneId zone) {
-        double julianDay = toJulianDay(date);
-        double t = julianCentury(julianDay);
+        double julianDay = CoordinateTransformer.toJulianDay(date);
+        double t = CoordinateTransformer.julianCentury(julianDay);
 
         double meanLongitude = solarMeanLongitude(t);
         double meanAnomaly = solarMeanAnomaly(t);
@@ -193,8 +193,8 @@ public class SolarCalculator {
     // -------------------------------------------------------------------------
 
     private int calculateAzimuth(double latitude, LocalDate date, boolean isSunrise) {
-        double julianDay = toJulianDay(date);
-        double t = julianCentury(julianDay);
+        double julianDay = CoordinateTransformer.toJulianDay(date);
+        double t = CoordinateTransformer.julianCentury(julianDay);
 
         double meanLongitude = solarMeanLongitude(t);
         double meanAnomaly = solarMeanAnomaly(t);
@@ -204,11 +204,12 @@ public class SolarCalculator {
         double omega = 125.04 - 1934.136 * t;
         double apparentLongitude = sunTrueLongitude - 0.00569 - 0.00478 * Math.sin(Math.toRadians(omega));
 
-        double meanObliquity = meanObliquityOfEcliptic(t);
+        double meanObliquity = CoordinateTransformer.meanObliquity(t);
         double correctedObliquity = meanObliquity + 0.00256 * Math.cos(Math.toRadians(omega));
 
         double declinationDeg = Math.toDegrees(
-                Math.asin(Math.sin(Math.toRadians(correctedObliquity)) * Math.sin(Math.toRadians(apparentLongitude)))
+                Math.asin(Math.sin(Math.toRadians(correctedObliquity))
+                        * Math.sin(Math.toRadians(apparentLongitude)))
         );
 
         // At sunrise/sunset the solar altitude is -(ZENITH - 90°) = -0.833°,
@@ -236,8 +237,8 @@ public class SolarCalculator {
 
     private LocalDateTime calculateWithZenith(double latitude, double longitude, LocalDate date,
             ZoneId zone, boolean isSunrise, double zenith) {
-        double julianDay = toJulianDay(date);
-        double t = julianCentury(julianDay);
+        double julianDay = CoordinateTransformer.toJulianDay(date);
+        double t = CoordinateTransformer.julianCentury(julianDay);
 
         double meanLongitude = solarMeanLongitude(t);
         double meanAnomaly = solarMeanAnomaly(t);
@@ -247,11 +248,12 @@ public class SolarCalculator {
         double omega = 125.04 - 1934.136 * t;
         double apparentLongitude = sunTrueLongitude - 0.00569 - 0.00478 * Math.sin(Math.toRadians(omega));
 
-        double meanObliquity = meanObliquityOfEcliptic(t);
+        double meanObliquity = CoordinateTransformer.meanObliquity(t);
         double correctedObliquity = meanObliquity + 0.00256 * Math.cos(Math.toRadians(omega));
 
         double declination = Math.toDegrees(
-                Math.asin(Math.sin(Math.toRadians(correctedObliquity)) * Math.sin(Math.toRadians(apparentLongitude)))
+                Math.asin(Math.sin(Math.toRadians(correctedObliquity))
+                        * Math.sin(Math.toRadians(apparentLongitude)))
         );
 
         double eqTime = equationOfTime(t, meanLongitude, meanAnomaly);
@@ -271,26 +273,6 @@ public class SolarCalculator {
         return utcDateTime.atZone(ZoneOffset.UTC).withZoneSameInstant(zone).toLocalDateTime();
     }
 
-    private double toJulianDay(LocalDate date) {
-        int y = date.getYear();
-        int m = date.getMonthValue();
-        int d = date.getDayOfMonth();
-
-        if (m <= 2) {
-            y -= 1;
-            m += 12;
-        }
-
-        int a = y / 100;
-        int b = 2 - a + a / 4;
-
-        return Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (m + 1)) + d + b - 1524.5;
-    }
-
-    private double julianCentury(double julianDay) {
-        return (julianDay - 2451545.0) / 36525.0;
-    }
-
     private double solarMeanLongitude(double t) {
         double l0 = 280.46646 + t * (36000.76983 + t * 0.0003032);
         return l0 % 360.0;
@@ -307,12 +289,8 @@ public class SolarCalculator {
                 + 0.000289 * Math.sin(3 * mRad);
     }
 
-    private double meanObliquityOfEcliptic(double t) {
-        return 23.0 + (26.0 + (21.448 - t * (46.8150 + t * (0.00059 - t * 0.001813))) / 60.0) / 60.0;
-    }
-
     private double equationOfTime(double t, double meanLongitude, double meanAnomaly) {
-        double epsilon = meanObliquityOfEcliptic(t);
+        double epsilon = CoordinateTransformer.meanObliquity(t);
         double omega = 125.04 - 1934.136 * t;
         double correctedEpsilon = epsilon + 0.00256 * Math.cos(Math.toRadians(omega));
 

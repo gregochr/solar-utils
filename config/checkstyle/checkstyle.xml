@@ -1,0 +1,101 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+    "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+    "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<!--
+    Checkstyle configuration for solar-utils.
+    Based on Google Java Style with modifications:
+      - 4-space indentation (not 2)
+      - 120-character line limit (not 100)
+-->
+<module name="Checker">
+    <property name="charset" value="UTF-8"/>
+    <property name="severity" value="error"/>
+    <property name="fileExtensions" value="java"/>
+
+    <!-- Line length: 120 characters -->
+    <module name="LineLength">
+        <property name="max" value="120"/>
+        <property name="ignorePattern" value="^package.*|^import.*|a href|href|http://|https://|ftp://"/>
+    </module>
+
+    <!-- Files must end with a newline -->
+    <module name="NewlineAtEndOfFile"/>
+
+    <module name="TreeWalker">
+
+        <!-- Imports -->
+        <module name="AvoidStarImport"/>
+        <module name="UnusedImports"/>
+        <module name="RedundantImport"/>
+        <module name="IllegalImport"/>
+
+        <!-- Only one top-level class per file -->
+        <module name="OneTopLevelClass"/>
+
+        <!-- Modifiers: public, protected, private, abstract, static, final, ... -->
+        <module name="ModifierOrder"/>
+        <module name="RedundantModifier"/>
+
+        <!-- Braces -->
+        <module name="NeedBraces"/>
+        <module name="LeftCurly"/>
+        <module name="RightCurly"/>
+
+        <!-- Naming conventions -->
+        <module name="TypeName"/>
+        <module name="MemberName">
+            <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+        </module>
+        <module name="MethodName">
+            <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+        </module>
+        <module name="ParameterName">
+            <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+        </module>
+        <module name="LocalVariableName">
+            <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+        </module>
+        <module name="ConstantName"/>
+        <module name="StaticVariableName"/>
+
+        <!-- No finalizer -->
+        <module name="NoFinalizer"/>
+
+        <!-- Use L not l for long literals -->
+        <module name="UpperEll"/>
+
+        <!-- No System.out in library code (ignores Javadoc and inline comments) -->
+        <module name="RegexpSinglelineJava">
+            <property name="format" value="System\.out"/>
+            <property name="ignoreComments" value="true"/>
+            <property name="message" value="System.out is not allowed in library code"/>
+        </module>
+
+        <!-- No System.err in library code (ignores Javadoc and inline comments) -->
+        <module name="RegexpSinglelineJava">
+            <property name="format" value="System\.err"/>
+            <property name="ignoreComments" value="true"/>
+            <property name="message" value="System.err is not allowed in library code"/>
+        </module>
+
+        <!-- Javadoc on public types -->
+        <module name="JavadocType">
+            <property name="scope" value="public"/>
+        </module>
+
+        <!-- Javadoc on public methods -->
+        <module name="JavadocMethod">
+            <property name="accessModifiers" value="public"/>
+            <property name="allowMissingParamTags" value="false"/>
+            <property name="allowMissingReturnTag" value="false"/>
+        </module>
+
+        <!-- Empty catch blocks must have a comment -->
+        <module name="EmptyCatchBlock">
+            <property name="exceptionVariableName" value="expected|ignore"/>
+        </module>
+
+    </module>
+</module>
