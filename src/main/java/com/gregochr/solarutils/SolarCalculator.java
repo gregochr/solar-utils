@@ -37,6 +37,14 @@ public class SolarCalculator {
      */
     private static final double CIVIL_TWILIGHT_ZENITH = 96.0;
 
+    /**
+     * Solar zenith angle at the golden hour boundary in degrees.
+     * The golden hour spans from sunrise/sunset to when the sun reaches +6°
+     * above the horizon (zenith = 84°). Beyond this point the light loses
+     * its characteristic warm, low-angle quality.
+     */
+    private static final double GOLDEN_HOUR_ZENITH = 84.0;
+
     // -------------------------------------------------------------------------
     // Sunrise / Sunset
     // -------------------------------------------------------------------------
@@ -101,6 +109,50 @@ public class SolarCalculator {
      */
     public LocalDateTime civilDusk(double latitude, double longitude, LocalDate date, ZoneId zone) {
         return calculateWithZenith(latitude, longitude, date, zone, false, CIVIL_TWILIGHT_ZENITH);
+    }
+
+    // -------------------------------------------------------------------------
+    // Golden hour
+    // -------------------------------------------------------------------------
+
+    /**
+     * Calculates the end of the golden hour after sunrise — when the sun
+     * reaches +6° elevation in the morning.
+     *
+     * <p>Golden hour spans from sunrise to this point. Duration varies
+     * significantly by latitude and season: shorter in summer (sun rises
+     * steeply), longer in winter (shallow ascent). At 55°N this ranges
+     * from roughly 30 minutes in midsummer to 80+ minutes in midwinter.
+     *
+     * @param latitude  latitude in decimal degrees (positive = North)
+     * @param longitude longitude in decimal degrees (positive = East)
+     * @param date      the date for which to calculate the golden hour end
+     * @param zone      the time zone for the returned LocalDateTime
+     * @return golden hour end time as a LocalDateTime in the given time zone
+     */
+    public LocalDateTime goldenHourEnd(double latitude, double longitude,
+                                        LocalDate date, ZoneId zone) {
+        return calculateWithZenith(latitude, longitude, date, zone,
+                                   true, GOLDEN_HOUR_ZENITH);
+    }
+
+    /**
+     * Calculates the start of the golden hour before sunset — when the sun
+     * descends to +6° elevation in the evening.
+     *
+     * <p>Golden hour spans from this point to sunset. Duration varies by
+     * latitude and season as above.
+     *
+     * @param latitude  latitude in decimal degrees (positive = North)
+     * @param longitude longitude in decimal degrees (positive = East)
+     * @param date      the date for which to calculate the golden hour start
+     * @param zone      the time zone for the returned LocalDateTime
+     * @return golden hour start time as a LocalDateTime in the given time zone
+     */
+    public LocalDateTime goldenHourStart(double latitude, double longitude,
+                                          LocalDate date, ZoneId zone) {
+        return calculateWithZenith(latitude, longitude, date, zone,
+                                   false, GOLDEN_HOUR_ZENITH);
     }
 
     // -------------------------------------------------------------------------

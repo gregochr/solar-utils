@@ -334,6 +334,119 @@ class SolarCalculatorTest {
     }
 
     // -------------------------------------------------------------------------
+    // Golden hour
+    // -------------------------------------------------------------------------
+
+    // Angel of the North: 54.9144°N, 1.5803°W
+    private static final double ANGEL_LAT = 54.9144;
+    private static final double ANGEL_LON = -1.5803;
+
+    @Test
+    @DisplayName("Golden hour start is before sunset on 5 April 2026")
+    void goldenHourStart_isBeforeSunset() {
+        var date = LocalDate.of(2026, 4, 5);
+        LocalDateTime start = calculator.goldenHourStart(ANGEL_LAT, ANGEL_LON, date, UTC);
+        LocalDateTime sunset = calculator.sunset(ANGEL_LAT, ANGEL_LON, date, UTC);
+
+        assertThat(start).isBefore(sunset);
+    }
+
+    @Test
+    @DisplayName("Golden hour end is after sunrise on 5 April 2026")
+    void goldenHourEnd_isAfterSunrise() {
+        var date = LocalDate.of(2026, 4, 5);
+        LocalDateTime end = calculator.goldenHourEnd(ANGEL_LAT, ANGEL_LON, date, UTC);
+        LocalDateTime sunrise = calculator.sunrise(ANGEL_LAT, ANGEL_LON, date, UTC);
+
+        assertThat(end).isAfter(sunrise);
+    }
+
+    @Test
+    @DisplayName("Evening golden hour at 55°N in April is 25–55 minutes")
+    void goldenHourWindow_eveningApril_plausibleDuration() {
+        var date = LocalDate.of(2026, 4, 5);
+        LocalDateTime start = calculator.goldenHourStart(ANGEL_LAT, ANGEL_LON, date, UTC);
+        LocalDateTime sunset = calculator.sunset(ANGEL_LAT, ANGEL_LON, date, UTC);
+
+        long minutes = MINUTES.between(start, sunset);
+        assertThat(minutes).isBetween(25L, 55L);
+    }
+
+    @Test
+    @DisplayName("Morning golden hour at 55°N on summer solstice exceeds 60 minutes (shallow sun angle)")
+    void goldenHourWindow_morningMidsummer_exceedsSixtyMinutes() {
+        var date = LocalDate.of(2026, 6, 21);
+        LocalDateTime sunrise = calculator.sunrise(ANGEL_LAT, ANGEL_LON, date, UTC);
+        LocalDateTime end = calculator.goldenHourEnd(ANGEL_LAT, ANGEL_LON, date, UTC);
+
+        long minutes = MINUTES.between(sunrise, end);
+        assertThat(minutes).isGreaterThan(60);
+    }
+
+    @Test
+    @DisplayName("Morning and evening golden hours are roughly equal on the same day")
+    void goldenHour_morningAndEvening_roughlySymmetric() {
+        var date = LocalDate.of(2026, 4, 5);
+        long morningMinutes = MINUTES.between(
+                calculator.sunrise(ANGEL_LAT, ANGEL_LON, date, UTC),
+                calculator.goldenHourEnd(ANGEL_LAT, ANGEL_LON, date, UTC));
+        long eveningMinutes = MINUTES.between(
+                calculator.goldenHourStart(ANGEL_LAT, ANGEL_LON, date, UTC),
+                calculator.sunset(ANGEL_LAT, ANGEL_LON, date, UTC));
+
+        assertThat(morningMinutes).isCloseTo(eveningMinutes, org.assertj.core.data.Offset.offset(10L));
+    }
+
+    @Test
+    @DisplayName("Golden hour end is before solar noon; golden hour start is after solar noon")
+    void goldenHour_bracketsSolarNoon() {
+        var date = LocalDate.of(2026, 4, 5);
+        LocalDateTime end = calculator.goldenHourEnd(ANGEL_LAT, ANGEL_LON, date, UTC);
+        LocalDateTime noon = calculator.solarNoon(ANGEL_LAT, ANGEL_LON, date, UTC);
+        LocalDateTime start = calculator.goldenHourStart(ANGEL_LAT, ANGEL_LON, date, UTC);
+
+        assertThat(end).isBefore(noon);
+        assertThat(start).isAfter(noon);
+    }
+
+    @Test
+    @DisplayName("Winter golden hour is longer than spring golden hour at 55°N (shallower ascent)")
+    void goldenHour_longerInWinterThanSpring() {
+        long winterMinutes = MINUTES.between(
+                calculator.sunrise(ANGEL_LAT, ANGEL_LON, LocalDate.of(2026, 12, 21), UTC),
+                calculator.goldenHourEnd(ANGEL_LAT, ANGEL_LON, LocalDate.of(2026, 12, 21), UTC));
+        long springMinutes = MINUTES.between(
+                calculator.sunrise(ANGEL_LAT, ANGEL_LON, LocalDate.of(2026, 3, 20), UTC),
+                calculator.goldenHourEnd(ANGEL_LAT, ANGEL_LON, LocalDate.of(2026, 3, 20), UTC));
+
+        assertThat(winterMinutes).isGreaterThan(springMinutes);
+    }
+
+    @Test
+    @DisplayName("Equatorial golden hour is shorter than 55°N golden hour (steeper sun path)")
+    void goldenHour_shorterAtEquatorThanHighLatitude() {
+        var date = LocalDate.of(2026, 4, 5);
+        long equatorMinutes = MINUTES.between(
+                calculator.sunrise(0.0, 0.0, date, UTC),
+                calculator.goldenHourEnd(0.0, 0.0, date, UTC));
+        long highLatMinutes = MINUTES.between(
+                calculator.sunrise(ANGEL_LAT, ANGEL_LON, date, UTC),
+                calculator.goldenHourEnd(ANGEL_LAT, ANGEL_LON, date, UTC));
+
+        assertThat(equatorMinutes).isLessThan(highLatMinutes);
+    }
+
+    @Test
+    @DisplayName("Golden hour start respects BST — 1 hour ahead of UTC in summer")
+    void goldenHourStart_respectsTimeZone() {
+        var date = LocalDate.of(2026, 6, 21);
+        LocalDateTime utcStart = calculator.goldenHourStart(ANGEL_LAT, ANGEL_LON, date, UTC);
+        LocalDateTime londonStart = calculator.goldenHourStart(ANGEL_LAT, ANGEL_LON, date, LONDON);
+
+        assertThat(londonStart).isEqualTo(utcStart.plusHours(1));
+    }
+
+    // -------------------------------------------------------------------------
     // Sanity checks
     // -------------------------------------------------------------------------
 
