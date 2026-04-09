@@ -91,6 +91,13 @@ jobs:
           restore-keys: |
             nvd-cache-${{ runner.os }}-
 
+      - name: Debug secret
+        run: |
+          echo "Key length: ${#NVD_KEY}"
+          echo "First char: ${NVD_KEY:0:1}"
+        env:
+          NVD_KEY: ${{ secrets.NVD_API_KEY }}
+
       - name: OWASP Dependency-Check
         run: |
           ./mvnw --batch-mode org.owasp:dependency-check-maven:check \
