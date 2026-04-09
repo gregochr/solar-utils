@@ -99,7 +99,7 @@ jobs:
           NVD_KEY: ${{ secrets.NVD_API_KEY }}
 
       - name: OWASP Dependency-Check
-        uses: jeremylong/DependencyCheck@main
+        uses: jeremylong/DependencyCheck@v11.1.1
         with:
           project: solar-utils
           path: .
