@@ -14,7 +14,7 @@ jobs:
 
   build-and-test:
     name: Build, Test & Quality Gates
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     permissions:
       contents: read
@@ -41,7 +41,7 @@ jobs:
 
   mutation-testing:
     name: Mutation Testing (PIT)
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: build-and-test
 
     permissions:
@@ -69,7 +69,7 @@ jobs:
 
   dependency-scan:
     name: OWASP Dependency Scan
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: build-and-test
     permissions:
       contents: read
