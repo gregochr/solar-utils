@@ -100,9 +100,10 @@ jobs:
 
       - name: OWASP Dependency-Check
         run: |
-          ./mvnw --batch-mode org.owasp:dependency-check-maven:check \
-          -DnvdApiKey=${{ secrets.NVD_API_KEY }} \
-          -DnvdApiDelay=4000
+          ./mvnw --batch-mode \
+            org.owasp:dependency-check-maven:check \
+            -DnvdApiKey=${{ secrets.NVD_API_KEY }} \
+            -DnvdApiDelay=4000
 
       - name: Upload Dependency-Check report
         if: always()
