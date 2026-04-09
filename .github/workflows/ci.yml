@@ -103,7 +103,7 @@ jobs:
           ./mvnw --batch-mode \
             org.owasp:dependency-check-maven:check \
             -DnvdApiKey=${{ secrets.NVD_API_KEY }} \
-            -DnvdApiDelay=4000
+            -DnvdApiDelay=16000
 
       - name: Upload Dependency-Check report
         if: always()
