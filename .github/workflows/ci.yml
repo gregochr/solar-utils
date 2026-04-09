@@ -95,7 +95,7 @@ jobs:
         continue-on-error: true
         run: |
           ./mvnw --batch-mode \
-          org.owasp:dependency-check-maven:check \
+          org.owasp:dependency-check-maven:12.1.1:check \
           -DnvdApiKey=${{ secrets.NVD_API_KEY }} \
           -DnvdApiDelay=16000
 
