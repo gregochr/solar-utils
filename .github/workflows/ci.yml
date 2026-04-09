@@ -91,26 +91,17 @@ jobs:
           restore-keys: |
             nvd-cache-${{ runner.os }}-
 
-      - name: Debug secret
-        run: |
-          echo "Key length: ${#NVD_KEY}"
-          echo "First char: ${NVD_KEY:0:1}"
-        env:
-          NVD_KEY: ${{ secrets.NVD_API_KEY }}
-
       - name: OWASP Dependency-Check
-        uses: jeremylong/DependencyCheck@v11.1.1
-        with:
-          project: solar-utils
-          path: .
-          format: HTML
-          nvdApiKey: ${{ secrets.NVD_API_KEY }}
-          args: >
-            --nvdApiDelay 16000
+        continue-on-error: true
+        run: |
+          ./mvnw --batch-mode \
+          org.owasp:dependency-check-maven:check \
+          -DnvdApiKey=${{ secrets.NVD_API_KEY }} \
+          -DnvdApiDelay=16000
 
       - name: Upload Dependency-Check report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: dependency-check-report
-          path: reports/
+          path: target/dependency-check-report.html
